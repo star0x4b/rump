@@ -22,13 +22,12 @@ type Redis struct {
 }
 
 // New creates the Redis struct, used to read/write.
-func New(source *radix.Pool, bus message.Bus, silent, ttl bool, tls bool) *Redis {
+func New(source *radix.Pool, bus message.Bus, silent, ttl bool) *Redis {
 	return &Redis{
 		Pool:   source,
 		Bus:    bus,
 		Silent: silent,
 		TTL:    ttl,
-		TLS:    tls,
 	}
 }
 

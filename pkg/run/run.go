@@ -48,7 +48,7 @@ func Run(cfg config.Config) {
 	if cfg.Source.IsRedis {
 	    var db *radix.Pool
 	    var err error
-	    if cfg.TLS {
+	    if cfg.Source.TLS {
 		    db, err = radix.NewPool("tcp", cfg.Source.URI, 1, radix.PoolConnFunc(CustomConnFunc))
 		} else {
 		    db, err = radix.NewPool("tcp", cfg.Source.URI, 1)
@@ -57,7 +57,7 @@ func Run(cfg config.Config) {
 			exit(err)
 		}
 
-		source := redis.New(db, ch, cfg.Silent, cfg.TTL, cfg.TLS)
+		source := redis.New(db, ch, cfg.Silent, cfg.TTL)
 
 		g.Go(func() error {
 			return source.Read(gctx)
@@ -74,7 +74,7 @@ func Run(cfg config.Config) {
 	if cfg.Target.IsRedis {
 	    var db *radix.Pool
 	    var err error
-	    if cfg.TLS {
+	    if cfg.Target.TLS {
 		    db, err = radix.NewPool("tcp", cfg.Target.URI, 1, radix.PoolConnFunc(CustomConnFunc))
 		} else {
 		    db, err = radix.NewPool("tcp", cfg.Target.URI, 1)
@@ -83,7 +83,7 @@ func Run(cfg config.Config) {
 			exit(err)
 		}
 
-		target := redis.New(db, ch, cfg.Silent, cfg.TTL, cfg.TLS)
+		target := redis.New(db, ch, cfg.Silent, cfg.TTL)
 
 		g.Go(func() error {
 			defer cancel()

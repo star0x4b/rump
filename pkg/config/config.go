@@ -13,6 +13,7 @@ import (
 type Resource struct {
 	URI     string
 	IsRedis bool
+	TLS     bool
 }
 
 // Config represents the current source and target config.
@@ -24,7 +25,6 @@ type Config struct {
 	Target Resource
 	Silent bool
 	TTL    bool
-	TLS    bool
 }
 
 // exit will exit and print the usage.
@@ -37,7 +37,7 @@ func exit(e error) {
 
 // validate makes sure from and to are Redis URIs or file paths,
 // and generates the final Config.
-func validate(from, to string, silent, ttl bool, tls bool) (Config, error) {
+func validate(from, to string, silent, ttl bool) (Config, error) {
 	cfg := Config{
 		Source: Resource{
 			URI: from,
@@ -47,7 +47,6 @@ func validate(from, to string, silent, ttl bool, tls bool) (Config, error) {
 		},
 		Silent: silent,
 		TTL:    ttl,
-		TLS:    tls,
 	}
 
 	if strings.HasPrefix(from, "redis://") {
@@ -56,6 +55,18 @@ func validate(from, to string, silent, ttl bool, tls bool) (Config, error) {
 
 	if strings.HasPrefix(to, "redis://") {
 		cfg.Target.IsRedis = true
+	}
+
+	if strings.HasPrefix(from, "tls://") {
+		cfg.Source.IsRedis = true
+		cfg.Source.TLS     = true
+		cfg.Source.URI     = strings.Replace(from, "tls://", "redis://", 1)
+	}
+
+	if strings.HasPrefix(to, "tls://") {
+		cfg.Target.IsRedis = true
+		cfg.Target.TLS     = true
+		cfg.Target.URI     = strings.Replace(to, "tls://", "redis://", 1)
 	}
 
 	// Guard from incorrect usage.
@@ -73,16 +84,15 @@ func validate(from, to string, silent, ttl bool, tls bool) (Config, error) {
 
 // Parse parses the command line flags and returns a Config.
 func Parse() Config {
-	example := "example: redis://127.0.0.1:6379/0 or /tmp/dump.rump"
+	example := "example: redis://127.0.0.1:6379/0 or tls://127.0.0.1:6379/0 or /tmp/dump.rump"
 	from := flag.String("from", "", example)
 	to := flag.String("to", "", example)
 	silent := flag.Bool("silent", false, "optional, no verbose output")
 	ttl := flag.Bool("ttl", false, "optional, enable ttl sync")
-	tls := flag.Bool("tls", false, "optional, enable TLS connection")
 
 	flag.Parse()
 
-	cfg, err := validate(*from, *to, *silent, *ttl, *tls)
+	cfg, err := validate(*from, *to, *silent, *ttl)
 	if err != nil {
 		// we exit here instead of returning so that we can show
 		// the usage examples in case of an error.
