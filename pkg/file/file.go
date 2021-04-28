@@ -9,7 +9,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/stickermule/rump/pkg/message"
+	"github.com/star0x4b/rump/pkg/message"
 )
 
 // File can read and write, to a file Path, using the message Bus.

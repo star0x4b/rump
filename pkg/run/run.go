@@ -5,21 +5,29 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"crypto/tls"
 
 	"github.com/mediocregopher/radix/v3"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/stickermule/rump/pkg/config"
-	"github.com/stickermule/rump/pkg/file"
-	"github.com/stickermule/rump/pkg/message"
-	"github.com/stickermule/rump/pkg/redis"
-	"github.com/stickermule/rump/pkg/signal"
+	"github.com/star0x4b/rump/pkg/config"
+	"github.com/star0x4b/rump/pkg/file"
+	"github.com/star0x4b/rump/pkg/message"
+	"github.com/star0x4b/rump/pkg/redis"
+	"github.com/star0x4b/rump/pkg/signal"
 )
 
 // Exit helper
 func exit(e error) {
 	fmt.Println(e)
 	os.Exit(1)
+}
+
+var CustomConnFunc = func(network, addr string) (radix.Conn, error) {
+    tlsConf := &tls.Config{
+         InsecureSkipVerify: true,
+    }
+    return radix.Dial(network, addr, radix.DialUseTLS(tlsConf))
 }
 
 // Run orchestrate the Reader, Writer and Signal handler.
@@ -38,12 +46,18 @@ func Run(cfg config.Config) {
 
 	// Create and run either a Redis or File Source reader.
 	if cfg.Source.IsRedis {
-		db, err := radix.NewPool("tcp", cfg.Source.URI, 1)
+	    var db *radix.Pool
+	    var err error
+	    if cfg.TLS {
+		    db, err = radix.NewPool("tcp", cfg.Source.URI, 1, radix.PoolConnFunc(CustomConnFunc))
+		} else {
+		    db, err = radix.NewPool("tcp", cfg.Source.URI, 1)
+		}
 		if err != nil {
 			exit(err)
 		}
 
-		source := redis.New(db, ch, cfg.Silent, cfg.TTL)
+		source := redis.New(db, ch, cfg.Silent, cfg.TTL, cfg.TLS)
 
 		g.Go(func() error {
 			return source.Read(gctx)
@@ -58,12 +72,18 @@ func Run(cfg config.Config) {
 
 	// Create and run either a Redis or File Target writer.
 	if cfg.Target.IsRedis {
-		db, err := radix.NewPool("tcp", cfg.Target.URI, 1)
+	    var db *radix.Pool
+	    var err error
+	    if cfg.TLS {
+		    db, err = radix.NewPool("tcp", cfg.Target.URI, 1, radix.PoolConnFunc(CustomConnFunc))
+		} else {
+		    db, err = radix.NewPool("tcp", cfg.Target.URI, 1)
+		}
 		if err != nil {
 			exit(err)
 		}
 
-		target := redis.New(db, ch, cfg.Silent, cfg.TTL)
+		target := redis.New(db, ch, cfg.Silent, cfg.TTL, cfg.TLS)
 
 		g.Go(func() error {
 			defer cancel()

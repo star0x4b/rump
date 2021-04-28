@@ -7,7 +7,7 @@ import (
 
 	"github.com/mediocregopher/radix/v3"
 
-	"github.com/stickermule/rump/pkg/message"
+	"github.com/star0x4b/rump/pkg/message"
 )
 
 // Redis holds references to a DB pool and a shared message bus.
@@ -18,15 +18,17 @@ type Redis struct {
 	Bus    message.Bus
 	Silent bool
 	TTL    bool
+	TLS    bool
 }
 
 // New creates the Redis struct, used to read/write.
-func New(source *radix.Pool, bus message.Bus, silent, ttl bool) *Redis {
+func New(source *radix.Pool, bus message.Bus, silent, ttl bool, tls bool) *Redis {
 	return &Redis{
 		Pool:   source,
 		Bus:    bus,
 		Silent: silent,
 		TTL:    ttl,
+		TLS:    tls,
 	}
 }
 
@@ -36,6 +38,13 @@ func (r *Redis) maybeLog(s string) {
 		return
 	}
 	fmt.Print(s)
+}
+
+// maybeLog may log, depending on the Silent flag
+func (r *Redis) maybeTLS(s string) {
+	if r.TLS {
+		return
+	}
 }
 
 // maybeTTL may sync the TTL, depending on the TTL flag

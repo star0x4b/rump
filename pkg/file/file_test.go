@@ -13,9 +13,9 @@ import (
 
 	"github.com/mediocregopher/radix/v3"
 
-	"github.com/stickermule/rump/pkg/file"
-	"github.com/stickermule/rump/pkg/message"
-	"github.com/stickermule/rump/pkg/redis"
+	"github.com/star0x4b/rump/pkg/file"
+	"github.com/star0x4b/rump/pkg/message"
+	"github.com/star0x4b/rump/pkg/redis"
 )
 
 var db1 *radix.Pool
